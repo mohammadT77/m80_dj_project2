@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 
-from app1.utils import get_client_ip
+from app1.utils import get_client_ip, get_ip_info
 
 
 def restrict_local_ip(view_func):
@@ -15,7 +15,7 @@ def restrict_local_ip(view_func):
     return wrapper
 
 
-def restrict_ip(*banned_ip):  # @restrict_ip('1.2.3.4', '12.54.22.22')
+def restrict_ip(*banned_ip):
     def inner_restrict_ip(view_func):
         def wrapper(request, *args, **kwargs):
             client_ip = get_client_ip(request)
@@ -26,3 +26,18 @@ def restrict_ip(*banned_ip):  # @restrict_ip('1.2.3.4', '12.54.22.22')
         return wrapper
 
     return inner_restrict_ip
+
+
+def restrict_countries(*countries):
+    def inner_restrict_country(view_func):
+        def wrapper(request, *args, **kwargs):
+            client_ip = get_client_ip(request)
+            ip_info = get_ip_info(client_ip)
+            if ip_info['country'] in countries:
+                return HttpResponse("Forbidden!!!", status=403)
+            return view_func(request, *args, **kwargs)
+
+        return wrapper
+
+    return inner_restrict_country
+
